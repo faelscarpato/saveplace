@@ -1,0 +1,9 @@
+{
+  "name": "SAVEPLACE",
+  "description": "Sistema de segurança familiar inteligente que monitora localização, alerta pais via assistente de voz em tempo real e envia instruções de áudio para crianças em perigo.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera",
+    "geolocation"
+  ]
+}
