@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:Saveplace.Core.Windows.Models;assembly=Saveplace.Core.Windows"
+             xmlns:viewModels="clr-namespace:Saveplace.Windows.App.ViewModels"
+             x:Class="Saveplace.Windows.App.Views.MainPage"
+             x:DataType="viewModels:MainViewModel"
+             Title="Saveplace AI Monitor"
+             BackgroundColor="#f1f5f9">
+
+    <!-- O Grid principal define a estrutura de 3 colunas -->
+    <Grid ColumnDefinitions="300, *, 350" ColumnSpacing="12" Padding="12">
+
+        <!-- ========================== -->
+        <!-- COLUNA 1: Lista de Perfis  -->
+        <!-- ========================== -->
+        <Border Grid.Column="0" StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="10">
+            <VerticalStackLayout Spacing="10">
+                <Label Text="Status da Família" FontSize="16" FontAttributes="Bold" />
+
+                <!-- CollectionView para exibir a lista de perfis -->
+                <CollectionView ItemsSource="{Binding Profiles}" SelectionMode="Single"
+                                SelectedItem="{Binding ActiveProfile}">
+                    <CollectionView.ItemTemplate>
+                        <DataTemplate x:DataType="models:UserProfile">
+                            <Border StrokeShape="RoundRectangle 5" Padding="10" Margin="0,5"
+                                    BackgroundColor="{Binding ., Converter={StaticResource ActiveProfileToColorConverter}}">
+                                <!-- O TapGestureRecognizer executa o comando ao clicar -->
+                                <Border.GestureRecognizers>
+                                    <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewModels:MainViewModel}}, Path=SelectProfileCommand}"
+                                                          CommandParameter="{Binding .}"/>
+                                </Border.GestureRecognizers>
+                                <Grid ColumnDefinitions="Auto, *, Auto">
+                                    <BoxView Grid.Column="0" CornerRadius="5" WidthRequest="10" HeightRequest="10"
+                                             Color="{Binding Status, Converter={StaticResource StatusToColorConverter}}"
+                                             VerticalOptions="Center"/>
+                                    <VerticalStackLayout Grid.Column="1" Margin="10,0">
+                                        <Label Text="{Binding Name}" FontAttributes="Bold" />
+                                        <Label Text="{Binding Type, StringFormat='{0}'}" FontSize="10" TextColor="Gray"/>
+                                    </VerticalStackLayout>
+                                    <Label Grid.Column="2" Text="{Binding Status, StringFormat='{0}'}" FontSize="10" VerticalOptions="Center" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </CollectionView.ItemTemplate>
+                </CollectionView>
+            </VerticalStackLayout>
+        </Border>
+
+        <!-- ========================== -->
+        <!-- COLUNA 2: Mapa (Simulação) -->
+        <!-- ========================== -->
+        <Border Grid.Column="1" StrokeShape="RoundRectangle 10" BackgroundColor="White">
+            <!-- Em um app real, aqui entraria um controle de mapa (ex: MapsUI) -->
+            <Grid>
+                <Label Text="[SIMULAÇÃO DE MAPA]" HorizontalOptions="Center" VerticalOptions="Center" TextColor="LightGray"/>
+                <Border IsVisible="{Binding IsEmergency}" BackgroundColor="#a0ef4444" VerticalOptions="Top" Margin="20"
+                        Padding="10" StrokeShape="RoundRectangle 5">
+                    <Label Text="⚠️ ALERTA DE SEGURANÇA ATIVO" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" />
+                </Border>
+            </Grid>
+        </Border>
+
+        <!-- =================================== -->
+        <!-- COLUNA 3: Painéis de Controle      -->
+        <!-- =================================== -->
+        <ScrollView Grid.Column="2">
+            <VerticalStackLayout Spacing="12">
+                <!-- Painel Bio-Link -->
+                <Border StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="15">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Saveplace Bio-Link" FontAttributes="Bold" />
+                        <Label Text="{Binding ActiveProfile.Name, StringFormat='Monitorando {0}'}" FontSize="12" />
+                        <Grid ColumnDefinitions="*,*">
+                            <VerticalStackLayout>
+                                <Label Text="{Binding ActiveProfile.HeartRate, StringFormat='{0} BPM'}" FontSize="24" FontAttributes="Bold" TextColor="#10b981"/>
+                                <Label Text="Frequência Cardíaca" FontSize="10" TextColor="Gray"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1">
+                                <Label Text="{Binding ActiveProfile.StressLevel, StringFormat='{0}'}" FontSize="24" FontAttributes="Bold" TextColor="#f59e0b"/>
+                                <Label Text="Nível de Estresse" FontSize="10" TextColor="Gray"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                        <!-- Seção de Análise da IA -->
+                        <Frame IsVisible="{Binding BioAnalysis, Converter={StaticResource NullToBoolConverter}}"
+                               BackgroundColor="#1e293b" CornerRadius="5" Padding="10">
+                            <VerticalStackLayout>
+                                <Label Text="{Binding BioAnalysis.Analysis.Status, StringFormat='Status: {0}'}" TextColor="White" FontAttributes="Bold"/>
+                                <Label Text="{Binding BioAnalysis.Analysis.Reasoning}" TextColor="LightGray" FontSize="10"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Painel Angel Link -->
+                <Border StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="15">
+                    <VerticalStackLayout Spacing="10">
+                        <Label Text="Angel Link (Rede de Apoio)" FontAttributes="Bold" />
+                        <!-- Lista de Voluntários -->
+                        <CollectionView ItemsSource="{Binding Volunteers}" HeightRequest="150">
+                            <CollectionView.ItemTemplate>
+                                <DataTemplate x:DataType="models:VolunteerProfile">
+                                    <Grid ColumnDefinitions="Auto, *, Auto" Padding="5">
+                                        <Label Text="🤝" FontSize="16" VerticalOptions="Center"/>
+                                        <VerticalStackLayout Grid.Column="1" Margin="10,0">
+                                            <Label Text="{Binding Name}" FontAttributes="Bold" FontSize="12"/>
+                                            <Label Text="{Binding Skills[0], StringFormat='{0}'}" FontSize="10" TextColor="Gray"/>
+                                        </VerticalStackLayout>
+                                        <Label Grid.Column="2" Text="{Binding Distance}" FontSize="10" VerticalOptions="Center" FontAttributes="Italic"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </CollectionView.ItemTemplate>
+                        </CollectionView>
+                         <!-- Seção de Briefing da IA -->
+                        <Frame IsVisible="{Binding VolunteerBriefing, Converter={StaticResource NullToBoolConverter}}"
+                               BackgroundColor="#4f46e5" CornerRadius="5" Padding="10">
+                            <VerticalStackLayout>
+                                <Label Text="Briefing do Guardian AI" TextColor="White" FontAttributes="Bold"/>
+                                <Label Text="{Binding VolunteerBriefing.SuggestedOpening, StringFormat='Sugestão: &quot;{0}&quot;'}" TextColor="White" FontSize="10" FontAttributes="Italic"/>
+                                <Label Text="{Binding VolunteerBriefing.SafetyWarning, StringFormat='Aviso: {0}'}" TextColor="Yellow" FontSize="10" Margin="0,5,0,0"/>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Painel de Ações -->
+                 <Border StrokeShape="RoundRectangle 10" BackgroundColor="White" Padding="15">
+                     <VerticalStackLayout Spacing="10">
+                         <Label Text="Controles" FontAttributes="Bold"/>
+                         <Button Text="Simular Emergência" Command="{Binding SimulateEmergencyCommand}" IsEnabled="{Binding IsNotAnalyzing}"/>
+                         <Button Text="Normalizar Situação" Command="{Binding NormalizeSituationCommand}" BackgroundColor="Gray"/>
+                         <ActivityIndicator IsRunning="{Binding IsAnalyzing}" IsVisible="{Binding IsAnalyzing}" HorizontalOptions="Center"/>
+                     </VerticalStackLayout>
+                 </Border>
+            </VerticalStackLayout>
+        </ScrollView>
+    </Grid>
+</ContentPage>
