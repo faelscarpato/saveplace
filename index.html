@@ -5,13 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SAVEPLACE - Family Safety</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Material 3 Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <style>
-      body { font-family: 'Inter', sans-serif; }
+      :root {
+        /* Material 3 Token Simulation (Indigo Seed) */
+        --md-sys-color-primary: #6750A4;
+        --md-sys-color-on-primary: #FFFFFF;
+        --md-sys-color-primary-container: #EADDFF;
+        --md-sys-color-on-primary-container: #21005D;
+
+        --md-sys-color-secondary: #625B71;
+        --md-sys-color-secondary-container: #E8DEF8;
+
+        --md-sys-color-error: #B3261E;
+        --md-sys-color-error-container: #F9DEDC;
+
+        --md-sys-color-surface: #FEF7FF;
+        --md-sys-color-surface-variant: #E7E0EC;
+        --md-sys-color-on-surface: #1D1B20;
+
+        --md-radius-m: 12px;
+        --md-radius-l: 16px;
+      }
+
+      body {
+        font-family: 'Roboto', sans-serif;
+        background-color: var(--md-sys-color-surface);
+        color: var(--md-sys-color-on-surface);
+      }
+
+      /* Material Utilities */
+      .m3-card {
+        background-color: white;
+        border-radius: var(--md-radius-l);
+        /* Elevation 1 */
+        box-shadow: 0px 1px 3px 1px rgba(0, 0, 0, 0.15), 0px 1px 2px 0px rgba(0, 0, 0, 0.30);
+      }
+
+      .m3-btn-primary {
+        background-color: var(--md-sys-color-primary);
+        color: var(--md-sys-color-on-primary);
+        border-radius: 100px;
+        font-weight: 500;
+        transition: box-shadow 0.2s;
+      }
+      .m3-btn-primary:hover {
+        box-shadow: 0px 1px 2px rgba(0,0,0,0.3);
+      }
+
       /* Custom pulse animation for emergency */
       @keyframes pulse-red {
-        0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-        50% { box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+        0%, 100% { box-shadow: 0 0 0 0 rgba(179, 38, 30, 0.7); }
+        50% { box-shadow: 0 0 0 20px rgba(179, 38, 30, 0); }
       }
       .animate-pulse-red {
         animation: pulse-red 2s infinite;
@@ -28,7 +77,8 @@
 }
 </script>
 </head>
-  <body class="bg-slate-50 text-slate-900 h-screen overflow-hidden">
+  <body class="bg-[#FEF7FF] text-[#1D1B20] h-screen overflow-hidden">
     <div id="root" class="h-full"></div>
+    <script type="module" src="/index.tsx"></script>
   </body>
 </html>

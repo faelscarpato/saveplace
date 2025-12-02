@@ -1,150 +1,35 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { UserProfile, SafePlace, Zone, EmergencyPlan, VolunteerProfile, VolunteerBriefing, BioAnalysisResult } from './types';
+import React, { useState, useRef } from 'react';
 import MapVisualizer from './components/MapVisualizer';
 import AssistantPanel from './components/AssistantPanel';
 import AngelLinkPanel from './components/AngelLinkPanel';
 import VolunteerCallModal from './components/VolunteerCallModal';
 import BioMonitorPanel from './components/BioMonitorPanel';
-import { LiveClient } from './services/liveClient';
-import { findSafePlaces, generateAlertAudio, analyzeImage, generateEmergencyPlan, generateVolunteerBriefing, analyzeBioTelemetry } from './services/geminiService';
-
-const MOCK_PROFILES: UserProfile[] = [
-  {
-    id: '1',
-    name: 'Vovô João',
-    type: 'ELDERLY',
-    deviceType: 'SMARTWATCH',
-    age: 78,
-    medicalCondition: 'Alzheimer Inicial',
-    status: 'SAFE',
-    location: { lat: 45, lng: 45 }, 
-    batteryLevel: 85,
-    lastUpdate: new Date(),
-    speed: 2,
-    lastMovement: new Date(),
-    locationHistory: [{ lat: 45, lng: 45, timestamp: new Date() }],
-    // Bio
-    heartRate: 72,
-    baselineHeartRate: 70,
-    stressLevel: 'LOW',
-    isFallDetected: false
-  },
-  {
-    id: '2',
-    name: 'Rex',
-    type: 'PET',
-    deviceType: 'GPS_TAG',
-    age: 4,
-    status: 'SAFE',
-    location: { lat: 55, lng: 55 },
-    batteryLevel: 90, 
-    lastUpdate: new Date(),
-    speed: 0,
-    lastMovement: new Date(),
-    locationHistory: [{ lat: 55, lng: 55, timestamp: new Date() }],
-    // Bio (Mock defaults)
-    heartRate: 80,
-    baselineHeartRate: 80,
-    stressLevel: 'LOW',
-    isFallDetected: false
-  },
-  {
-    id: '3',
-    name: 'Sofia',
-    type: 'CHILD',
-    deviceType: 'SMARTWATCH',
-    age: 8,
-    status: 'SAFE',
-    location: { lat: 50, lng: 50 },
-    batteryLevel: 72,
-    lastUpdate: new Date(),
-    speed: 4,
-    lastMovement: new Date(),
-    locationHistory: [{ lat: 50, lng: 50, timestamp: new Date() }],
-    // Bio
-    heartRate: 90,
-    baselineHeartRate: 85,
-    stressLevel: 'LOW',
-    isFallDetected: false
-  }
-];
-
-const MOCK_ZONES: Zone[] = [
-  { id: 'z1', name: 'Casa', lat: 50, lng: 50, radius: 15 },
-  { id: 'z2', name: 'Escola', lat: 20, lng: 80, radius: 10 }
-];
-
-const MOCK_VOLUNTEERS: VolunteerProfile[] = [
-  { id: 'v1', name: 'Dr. Silva', skills: ['Médico'], isOnline: true, distance: '0.5km', rating: 4.8 },
-  { id: 'v2', name: 'Ana Vizinha', skills: ['Vizinho', 'Familiar'], isOnline: true, distance: '0.1km', rating: 5.0 },
-  { id: 'v3', name: 'Sgt. Souza', skills: ['Geral'], isOnline: false, distance: '1.2km', rating: 4.5 }
-];
+import { useAppViewModel } from './src/presentation/viewModels/useAppViewModel';
 
 const App: React.FC = () => {
-  const [profiles, setProfiles] = useState<UserProfile[]>(MOCK_PROFILES);
-  const [zones] = useState<Zone[]>(MOCK_ZONES);
-  const [isListening, setIsListening] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [volunteers] = useState<VolunteerProfile[]>(MOCK_VOLUNTEERS);
-  const [activeProfile, setActiveProfile] = useState<UserProfile | null>(MOCK_PROFILES[0]); 
-  const [aiBriefing, setAiBriefing] = useState<VolunteerBriefing | null>(null);
-  const [isEmergency, setIsEmergency] = useState(false);
-  const [showVolunteerModal, setShowVolunteerModal] = useState(false);
-  
-  // Bio Analysis State
-  const [bioResult, setBioResult] = useState<BioAnalysisResult | null>(null);
-  const [analyzingBio, setAnalyzingBio] = useState(false);
-  
-  // Vision State
-  const [visionAnalysis, setVisionAnalysis] = useState<string>('');
-  const [isAnalyzingImage, setIsAnalyzingImage] = useState(false);
+  const {
+      profiles,
+      zones,
+      volunteers,
+      activeProfile,
+      setActiveProfile,
+      isEmergency,
+      connected,
+      isListening,
+      toggleConnection,
+      simulateBioEvent,
+      analyzeImage,
+      isAnalyzingImage,
+      visionAnalysis,
+      bioResult,
+      analyzingBio,
+      aiBriefing,
+      showVolunteerModal,
+      setShowVolunteerModal
+  } = useAppViewModel();
 
   // Mobile Nav State
   const [currentView, setCurrentView] = useState<'map' | 'dashboard'>('map');
-
-  const liveClientRef = useRef<LiveClient | null>(null);
-
-  useEffect(() => {
-    liveClientRef.current = new LiveClient({
-      onOpen: () => {
-        setConnected(true);
-        setIsListening(true);
-      },
-      onClose: () => {
-        setConnected(false);
-        setIsListening(false);
-      },
-      onAudioData: (buffer) => {
-        playAudioBuffer(buffer);
-      },
-      onError: (err) => {
-          console.error("Live Client Error:", err);
-          setConnected(false);
-          setIsListening(false);
-          alert("Erro de conexão. Verifique permissões de microfone.");
-      }
-    });
-
-    return () => {
-      liveClientRef.current?.disconnect();
-    };
-  }, []);
-
-  const playAudioBuffer = async (buffer: AudioBuffer) => {
-      const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const source = ctx.createBufferSource();
-      source.buffer = buffer;
-      source.connect(ctx.destination);
-      source.start(0);
-  };
-
-  const toggleConnection = () => {
-    if (connected) {
-      liveClientRef.current?.disconnect();
-    } else {
-      liveClientRef.current?.connect();
-    }
-  };
 
   // Swipe Logic
   const touchStart = useRef(0);
@@ -175,125 +60,11 @@ const App: React.FC = () => {
       touchEnd.current = 0;
   };
 
-  // Simulate movement (and minor HR fluctuation)
-  useEffect(() => {
-    const interval = setInterval(() => {
-        setProfiles(prev => prev.map(p => {
-            // Only simulate movement if not in a critical bio state for demo purposes
-            if (p.isFallDetected) return p; 
-
-            const moveLat = (Math.random() - 0.5) * 2; 
-            const moveLng = (Math.random() - 0.5) * 2;
-            
-            let newLat = Math.max(0, Math.min(100, p.location.lat + moveLat));
-            let newLng = Math.max(0, Math.min(100, p.location.lng + moveLng));
-
-            // Logic to trigger danger for demo (if far from center)
-            const distFromCenter = Math.sqrt(Math.pow(newLat - 50, 2) + Math.pow(newLng - 50, 2));
-            const newStatus = distFromCenter > 40 && !isEmergency ? 'DANGER' : p.status;
-
-            return {
-                ...p,
-                location: { lat: newLat, lng: newLng },
-                status: newStatus,
-                locationHistory: [...p.locationHistory, { lat: newLat, lng: newLng, timestamp: new Date() }].slice(-20),
-                // Slight HR noise
-                heartRate: p.stressLevel === 'HIGH' ? p.heartRate : p.baselineHeartRate + Math.floor(Math.random() * 5 - 2)
-            };
-        }));
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [isEmergency]);
-
-  // Monitor for danger changes to trigger alerts
-  useEffect(() => {
-      const dangerProfile = profiles.find(p => p.status === 'DANGER');
-      if (dangerProfile && !isEmergency) {
-          handleEmergency(dangerProfile);
-      } else if (!dangerProfile && isEmergency) {
-          // Reset logic handled elsewhere
-      }
-  }, [profiles, isEmergency]);
-
-  const handleEmergency = async (p: UserProfile, forcedBioResult?: BioAnalysisResult) => {
-      if(isEmergency) return; // Prevent double trigger
-      setIsEmergency(true);
-      setActiveProfile(p);
-      
-      try {
-        const instruction = forcedBioResult?.recommended_action.voice_message_to_user 
-            || "Você saiu da zona segura.";
-
-        const audio = await generateAlertAudio(p.name, p.type, instruction);
-        if (audio) playAudioBuffer(audio);
-
-        const nearbyPOIs = ["Parque da Cidade (Leste)", "Av. Movimentada a 200m"];
-        const briefing = await generateVolunteerBriefing(p, p.location, nearbyPOIs);
-        setAiBriefing(briefing);
-        setTimeout(() => setShowVolunteerModal(true), 1500);
-      } catch (e) {
-          console.error("Error generating emergency assets", e);
-      }
-  };
-
-  // Logic to simulate bio-events
-  const simulateBioEvent = async (type: 'PANIC' | 'FALL' | 'NORMAL') => {
-      if (!activeProfile) return;
-
-      let updatedProfile = { ...activeProfile };
-
-      if (type === 'PANIC') {
-          updatedProfile.heartRate = 145;
-          updatedProfile.stressLevel = 'HIGH';
-          updatedProfile.speed = 0; // Frozen
-          updatedProfile.isFallDetected = false;
-      } else if (type === 'FALL') {
-          updatedProfile.heartRate = 110; // Stress from fall
-          updatedProfile.stressLevel = 'HIGH';
-          updatedProfile.speed = 0;
-          updatedProfile.isFallDetected = true;
-      } else {
-          updatedProfile.heartRate = updatedProfile.baselineHeartRate;
-          updatedProfile.stressLevel = 'LOW';
-          updatedProfile.isFallDetected = false;
-          setBioResult(null);
-          setIsEmergency(false);
-          setShowVolunteerModal(false);
-          setAiBriefing(null);
-      }
-
-      // Update state
-      setProfiles(prev => prev.map(p => p.id === activeProfile.id ? updatedProfile : p));
-      setActiveProfile(updatedProfile);
-
-      if (type !== 'NORMAL') {
-          setAnalyzingBio(true);
-          const result = await analyzeBioTelemetry(updatedProfile, "Parque Central (Local Conhecido)");
-          setBioResult(result);
-          setAnalyzingBio(false);
-
-          if (result.analysis.status === 'ALERTA_VERMELHO') {
-              handleEmergency(updatedProfile, result);
-          }
-      }
-  };
-
   // Image Upload Handler
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-
-      setIsAnalyzingImage(true);
-      setVisionAnalysis("");
-      
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-          const base64String = (reader.result as string).split(',')[1];
-          const result = await analyzeImage(base64String, file.type);
-          setVisionAnalysis(result || "Não foi possível analisar.");
-          setIsAnalyzingImage(false);
-      };
-      reader.readAsDataURL(file);
+      analyzeImage(file);
   };
 
   return (

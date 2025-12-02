@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { UserProfile, Zone } from '../types';
+import { UserProfile, Zone } from '../src/domain/entities/types';
 
 interface Props {
   profiles: UserProfile[];

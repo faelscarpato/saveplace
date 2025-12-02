@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { VolunteerProfile, UserProfile, VolunteerBriefing } from '../types';
+import { VolunteerProfile, UserProfile, VolunteerBriefing } from '../src/domain/entities/types';
 
 interface Props {
   volunteers: VolunteerProfile[];

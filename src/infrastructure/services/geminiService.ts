@@ -1,12 +1,15 @@
 
 import { GoogleGenAI, Modality } from "@google/genai";
 import { decodeAudioData } from "./audioUtils";
-import { SafePlace, UserProfile, EmergencyPlan, VolunteerBriefing, Location, BioAnalysisResult } from "../types";
+import { SafePlace, UserProfile, EmergencyPlan, VolunteerBriefing, Location, BioAnalysisResult } from "../../domain/entities/types";
+import { IGeminiService } from "../../domain/interfaces/IGeminiService";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || '' });
 
+export class GeminiService implements IGeminiService {
+
 // 1. Child/Elderly Alert TTS Generation
-export const generateAlertAudio = async (name: string, type: string, instruction: string): Promise<AudioBuffer | null> => {
+public async generateAlertAudio(name: string, type: string, instruction: string): Promise<AudioBuffer | null> {
   try {
     const prompt = type === 'ELDERLY' 
         ? `Atenção Sr(a) ${name}. Detectamos que o senhor pode estar perdido. Por favor, pare onde está e aguarde ajuda. Sua família já foi avisada.`
@@ -41,7 +44,7 @@ export const generateAlertAudio = async (name: string, type: string, instruction
 };
 
 // 2. Maps Grounding to find Safe Places
-export const findSafePlaces = async (lat: number, lng: number): Promise<SafePlace[]> => {
+public async findSafePlaces(lat: number, lng: number): Promise<SafePlace[]> {
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash",
@@ -70,7 +73,7 @@ export const findSafePlaces = async (lat: number, lng: number): Promise<SafePlac
 };
 
 // 3. Emergency Plan Generation (The "Investigator")
-export const generateEmergencyPlan = async (profile: UserProfile): Promise<EmergencyPlan> => {
+public async generateEmergencyPlan(profile: UserProfile): Promise<EmergencyPlan> {
     try {
         const context = `
             Profile: ${profile.name}, Type: ${profile.type}, Age: ${profile.age}.
@@ -117,7 +120,7 @@ export const generateEmergencyPlan = async (profile: UserProfile): Promise<Emerg
 }
 
 // 4. Image Analysis (Vision)
-export const analyzeImage = async (base64Data: string, mimeType: string) => {
+public async analyzeImage(base64Data: string, mimeType: string): Promise<string> {
     try {
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
@@ -136,11 +139,11 @@ export const analyzeImage = async (base64Data: string, mimeType: string) => {
 }
 
 // 5. Angel Link Briefing (The "SAVEPLACE GUARDIAN")
-export const generateVolunteerBriefing = async (
+public async generateVolunteerBriefing(
   profile: UserProfile, 
   locationData: Location,
   nearbyPOIs: string[]
-): Promise<VolunteerBriefing> => {
+): Promise<VolunteerBriefing> {
     try {
         // Telemetry Calculation
         const now = new Date();
@@ -211,10 +214,10 @@ export const generateVolunteerBriefing = async (
 }
 
 // 6. Bio-Analyst (The "Bio-Guardian")
-export const analyzeBioTelemetry = async (
+public async analyzeBioTelemetry(
   profile: UserProfile,
   locationType: string = "Desconhecido"
-): Promise<BioAnalysisResult> => {
+): Promise<BioAnalysisResult> {
     try {
         const speedKmh = (profile.speed * 1.60934).toFixed(1);
         const activityType = profile.speed > 20 ? "Em Veículo" : profile.speed > 3 ? "Caminhando" : "Parado";
@@ -314,3 +317,6 @@ export const analyzeBioTelemetry = async (
         };
     }
 }
+}
+
+export const geminiService = new GeminiService();
