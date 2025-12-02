@@ -1,4 +1,5 @@
 
+// Entities
 export interface Location {
   lat: number;
   lng: number;
@@ -16,11 +17,12 @@ export interface Zone {
   name: string;
   lat: number;
   lng: number;
-  radius: number; // percentage of map width for simulation
+  radius: number;
 }
 
 export type ProfileType = 'CHILD' | 'ELDERLY' | 'FRIEND' | 'PET' | 'OBJECT';
 export type DeviceType = 'PHONE' | 'GPS_TAG' | 'SMARTWATCH';
+export type ProfileStatus = 'SAFE' | 'DANGER' | 'UNKNOWN' | 'OFFLINE';
 
 export interface UserProfile {
   id: string;
@@ -28,16 +30,16 @@ export interface UserProfile {
   type: ProfileType;
   deviceType: DeviceType;
   age?: number;
-  medicalCondition?: string; // e.g., "Alzheimer", "Diabetic", "Autism"
-  status: 'SAFE' | 'DANGER' | 'UNKNOWN' | 'OFFLINE';
+  medicalCondition?: string;
+  status: ProfileStatus;
   location: Location;
   batteryLevel: number;
   lastUpdate: Date;
-  speed: number; // mph
+  speed: number;
   lastMovement: Date;
   locationHistory: LocationHistoryPoint[];
   
-  // Bio-Telemetry (New)
+  // Bio-Telemetry
   heartRate: number;
   baselineHeartRate: number;
   stressLevel: 'LOW' | 'MEDIUM' | 'HIGH';
@@ -53,12 +55,11 @@ export interface SafePlace {
 
 export interface EmergencyPlan {
   summary: string;
-  nearbyContext: string[]; // "Bank with cameras nearby", "Bus stop 50m away"
+  nearbyContext: string[];
   actionSteps: string[];
 }
 
-// --- Angel Link / Volunteer System ---
-
+// Volunteer Domain
 export type VolunteerSkill = 'Médico' | 'Psicólogo' | 'Familiar' | 'Vizinho' | 'Geral';
 
 export interface VolunteerProfile {
@@ -66,7 +67,7 @@ export interface VolunteerProfile {
   name: string;
   skills: VolunteerSkill[]; 
   isOnline: boolean;
-  distance: string; // Simulated distance for UI
+  distance: string;
   rating: number;
   languages?: string[];
 }
@@ -77,17 +78,7 @@ export interface VolunteerBriefing {
   safety_warning: string;
 }
 
-export interface HelpRequest {
-  id: string;
-  requesterId: string;
-  location: Location;
-  timestamp: Date;
-  urgencyLevel: 'Informativo' | 'Baixo' | 'Alto';
-  aiBriefing?: VolunteerBriefing; 
-}
-
-// --- Bio Analyst ---
-
+// Analysis Domain
 export interface BioAnalysisResult {
   analysis: {
     status: 'NORMAL' | 'ALERTA_AMARELO' | 'ALERTA_VERMELHO';

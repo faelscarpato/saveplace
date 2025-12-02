@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { UserProfile, VolunteerBriefing } from '../types';
+import { UserProfile, VolunteerBriefing } from '../src/domain/entities/types';
 
 interface Props {
   caller: UserProfile;

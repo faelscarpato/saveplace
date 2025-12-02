@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { UserProfile, BioAnalysisResult } from '../types';
+import { UserProfile, BioAnalysisResult } from '../src/domain/entities/types';
 
 interface Props {
   profile: UserProfile;
